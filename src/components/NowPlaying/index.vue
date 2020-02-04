@@ -1,7 +1,19 @@
 <template>
     <div class="movie_body">
 				<ul>
-					<li>
+					<li v-for="movie in movieList" :key="movie.id">
+						<div class="pic_show"><img :src="movie.img | setWH('128.180')"></div>
+						<div class="info_list">
+							<h2>{{ movie.nm }}</h2>
+							<p>观众评 <span class="grade">{{ movie.sc }}</span></p>
+							<p>主演: {{ movie.star }}</p>
+							<p>{{ movie.showInfo}}</p>
+						</div>
+						<div class="btn_mall">
+							购票
+						</div>
+					</li>
+					<!-- <li>
 						<div class="pic_show"><img src="/images/movie_1.jpg"></div>
 						<div class="info_list">
 							<h2>无名之辈</h2>
@@ -84,7 +96,6 @@
 						<div class="btn_mall">
 							购票
 						</div>
-					</li>
 					<li>
 						<div class="pic_show"><img src="/images/movie_2.jpg"></div>
 						<div class="info_list">
@@ -96,7 +107,7 @@
 						<div class="btn_mall">
 							购票
 						</div>
-					</li>
+					</li> -->
 				</ul>
 			</div>
 
@@ -104,8 +115,19 @@
 
 <script>
 export default {
-  name: 'NowPlaying'
-}
+	name: 'NowPlaying',
+	data() {
+		return {
+			movieList: []
+		}
+	},
+	mounted() {
+		this.axios.get('/api/movieOnInfoList?cityId=10').then(res => {
+			// console.log(res.data);
+			this.movieList = res.data.data.movieList;
+		})
+	}
+} 
 </script>
 
 <style scoped>
