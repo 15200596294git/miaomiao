@@ -1,84 +1,30 @@
 <template>
   <div class="city_body">
+    
     <div class="city_list">
+      <Loading v-if="isLoading"/>
+      <Scroller v-else ref="city_list">
+      <div>
       <div class="city_hot">
         <h2>热门城市</h2>
         <ul class="clearfix">
-          <li v-for="hotCity in hotList" :key="hotCity.id"> {{ hotCity.nm }}</li>
-          <!-- <li>北京</li>
-          <li>上海</li>
-          <li>北京</li>
-          <li>上海</li>
-          <li>北京</li>
-          <li>上海</li>
-          <li>北京</li> -->
+          <li v-for="hotCity in hotList" :key="hotCity.id" @tap="handleToCity(hotCity.nm,hotCity.id)"> {{ hotCity.nm }}</li>
         </ul>
       </div>
       <div class="city_sort" ref="city_sort">
         <div v-for="cities in cityList" :key="cities.indexs">
           <h2>{{ cities.index }}</h2>
           <ul>
-            <li v-for="city in cities.list" :key="city.id"> {{ city.nm }}</li>
-            <!-- <li>鞍山</li>
-            <li>安庆</li>
-            <li>安阳</li> -->
+            <li v-for="city in cities.list" @tap="handleToCity(city.nm,city.id)" :key="city.id"> {{ city.nm }}</li>
           </ul>
         </div>
-        <!-- <div>
-          <h2>B</h2>
-          <ul>
-            <li>北京</li>
-            <li>保定</li>
-            <li>蚌埠</li>
-            <li>包头</li>
-          </ul>
-        </div>
-        <div>
-          <h2>A</h2>
-          <ul>
-            <li>阿拉善盟</li>
-            <li>鞍山</li>
-            <li>安庆</li>
-            <li>安阳</li>
-          </ul>
-        </div>
-        <div>
-          <h2>B</h2>
-          <ul>
-            <li>北京</li>
-            <li>保定</li>
-            <li>蚌埠</li>
-            <li>包头</li>
-          </ul>
-        </div>
-        <div>
-          <h2>A</h2>
-          <ul>
-            <li>阿拉善盟</li>
-            <li>鞍山</li>
-            <li>安庆</li>
-            <li>安阳</li>
-          </ul>
-        </div>
-        <div>
-          <h2>B</h2>
-          <ul>
-            <li>北京</li>
-            <li>保定</li>
-            <li>蚌埠</li>
-            <li>包头</li>
-          </ul>
-        </div> -->
       </div>
+      </div>
+      </Scroller>
     </div>
     <div class="city_index">
       <ul>
         <li v-for="(item,index) in cityList" :key="item.index" @touchstart="handleToIndex(index)"> {{ item.index}} </li>
-        <!-- <li>A</li>
-        <li>B</li>
-        <li>C</li>
-        <li>D</li>
-        <li>E</li> -->
       </ul>
     </div>
     <div style="overflow: hidden;"></div>
@@ -91,18 +37,33 @@ export default {
   data() {
     return {
       cityList: [],
-      hotList: []
+      hotList: [],
+      isLoading: true
     }
   },
   mounted() {
+
+    // 如果有本地存储，用本地存储
+    var cityList = window.localStorage.getItem('cityList');
+    var hotList = window.localStorage.getItem('hotList');
+    // 如果在缓存中两者都有缓存，那么启用缓存中的数据
+    if(cityList && hotList) {
+      this.cityList = JSON.parse(cityList);
+      this.hotList = JSON.parse(hotList);
+      this.isLoading = false;
+    }
     this.axios.get("/api/cityList").then(res => {
       console.log(res);
       var msg = res.data.msg;
       if (msg === "ok") {
+        this.isLoading = false;
         var cities = res.data.data.cities;
         var { cityList, hotList} = this.formatCityList(cities);
         this.cityList = cityList;
         this.hotList = hotList;
+        // 数据请求之后进行本地缓存
+        window.localStorage.setItem('cityList',JSON.stringify(cityList));
+        window.localStorage.setItem('hotList',JSON.stringify(hotList));
       }
 		});
   },
@@ -157,10 +118,20 @@ export default {
       }
     },
     handleToIndex(index) {
+      console.log(index)
     // 获取到循环列表中的h2(跳到h2标签部分)
     var h2 = this.$refs.city_sort.getElementsByTagName('h2');
     // console.log(h2[index].offsetTop)
-    this.$refs.city_sort.parentNode.scrollTop = h2[index].offsetTop;
+    this.$refs.city_list.toScrollTop(-h2[index].offsetTop);
+    // this.$refs.city_sort.parentNode.parentNode.parentNode.scrollTop = h2[index].offsetTop;
+    },
+    handleToCity(nm,id) {
+      // console.log(nm,id)
+      // 修改vuex中的数据
+      this.$store.commit('city/CITY_INFO',{nm,id});
+      window.localStorage.setItem('nowNm',nm);
+      window.localStorage.setItem('nowId',id);
+      this.$router.push('/movie/nowPlaying');
     }
   }
 };
@@ -220,7 +191,7 @@ export default {
 }
 .city_body .city_sort ul li {
   line-height: 30px;
-  line-height: 30px;
+  
 }
 .city_body .city_index {
   width: 20px;
