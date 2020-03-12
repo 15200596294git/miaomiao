@@ -1,7 +1,8 @@
 <template>
   <header id="header">
-			<h1> {{title}} </h1>
-		</header>
+    <slot></slot>
+		<h1> {{title}} </h1>
+	</header>
 </template>
 
 <script>
